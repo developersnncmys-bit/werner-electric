@@ -301,8 +301,9 @@ export default function Animations() {
             scrollTrigger: {
               trigger: quoteSection,
               start: "top top",
-              end: "+=150%",
+              end: "+=100%",
               pin: true,
+              pinSpacing: true,
               scrub: 0.5,
               anticipatePin: 1,
               invalidateOnRefresh: true,

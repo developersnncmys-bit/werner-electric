@@ -46,39 +46,23 @@ export default function Preloader() {
       aria-hidden="true"
     >
       <div className="preloader__content">
-        {/* Corner tags */}
+        {/* Loading counter — top left */}
+        <div className="preloader__count-wrap">
+          <span className="preloader__count-label">Loading</span>
+          <span className="preloader__count-num">{progress}</span>
+        </div>
+
+        {/* Bottom-right locale */}
         <div className="preloader__corner preloader__corner--br">
           <span>MYSORE &middot; ISTANBUL</span>
         </div>
 
         {/* Center mark */}
         <div className="preloader__mark-wrap">
-          <p className="preloader__eyebrow">
-            <span className="preloader__signal-dot" />
-            Initialising
-          </p>
           <h1 className="preloader__mark">
             Werner<span className="preloader__mark-dot">.</span>
           </h1>
-        </div>
-
-        {/* Bottom progress row */}
-        <div className="preloader__bottom">
-          <p className="preloader__count">
-            <span className="preloader__count-num">
-              {String(progress).padStart(3, "0")}
-            </span>
-            <span className="preloader__count-sym">%</span>
-          </p>
-          <div className="preloader__bar">
-            <div
-              className="preloader__bar-fill"
-              style={{ transform: `scaleX(${progress / 100})` }}
-            />
-          </div>
-          <p className="preloader__status">
-            {progress < 100 ? "Loading assets" : "Ready"}
-          </p>
+          <span className="preloader__mark-line" />
         </div>
       </div>
     </div>

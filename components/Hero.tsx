@@ -4,7 +4,7 @@ export default function Hero() {
       <div className="hero__bg" aria-hidden="true">
         <video
           className="hero__img"
-          src="/hero.mp4"
+          src="/herovideo.mp4"
           autoPlay
           muted
           loop
