@@ -276,7 +276,8 @@ button { font: inherit; cursor: pointer; }
 }
 .nav--on-light .nav__item > a:hover { background: rgba(0,0,0,0.05); }
 
-.nav__logo svg { height: 22px; width: auto; fill: currentColor; }
+.nav__logo { display: inline-flex; align-items: center; }
+.nav__logo-img { height: 32px; width: auto; display: block; }
 
 .nav__menu {
   list-style: none;

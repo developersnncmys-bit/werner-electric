@@ -23,11 +23,8 @@ export default function Nav() {
   return (
     <nav className={`nav ${scrolled ? "nav--scrolled" : ""} ${open ? "nav--open" : ""}`}>
       <a href="#top" className="nav__logo" aria-label="Werner Electric home" onClick={close}>
-        <svg viewBox="0 0 140 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <text x="0" y="17" fontFamily="'PP Neue Montreal','Switzer',sans-serif" fontWeight="800" fontSize="18" letterSpacing="2">
-            WERNER
-          </text>
-        </svg>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="nav__logo-img" src="/logo.png" alt="Werner Electric" />
       </a>
 
       <ul className="nav__menu" role="menubar">

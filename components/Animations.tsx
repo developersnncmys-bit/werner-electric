@@ -191,12 +191,17 @@ export default function Animations() {
       const aboutCards = document.querySelector<HTMLElement>(".about__cards");
       const aboutCardsWrap = document.querySelector<HTMLElement>(".about__cards-wrap");
       if (aboutSection && aboutCards && aboutCardsWrap && window.innerWidth > 900) {
-        const startHold = 500; // px of scroll where section is pinned but cards don't move
-        const endHold = 200;   // px of scroll after cards finish before pin releases
+        const startHold = 0;  // no dead time before cards start scrolling
+        const endHold = 0;    // no trailing dwell — Ecosystem shows immediately when pin releases
         /* Horizontal distance: scroll left until the last card's RIGHT edge lines up
            with the wrap's right edge — no dead space after the final card. */
         const getDistance = () =>
           Math.max(0, aboutCards.scrollWidth - aboutCardsWrap.offsetWidth);
+        /* Pin has to last long enough that when it releases, the About block is
+           already scrolled out — otherwise the section reappears as it slides up
+           through the viewport after unpin. */
+        const getPinDuration = () =>
+          getDistance() + startHold + endHold + aboutSection.offsetHeight;
 
         /* Detect which card is closest to the wrap's horizontal center; add .is-active */
         const cardEls = () =>
@@ -223,7 +228,7 @@ export default function Animations() {
           scrollTrigger: {
             trigger: aboutSection,
             start: "top top",
-            end: () => `+=${getDistance() + startHold + endHold}`,
+            end: () => `+=${getPinDuration()}`,
             pin: true,
             pinSpacing: true,
             scrub: 1,
