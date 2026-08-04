@@ -36,7 +36,9 @@ html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  background: var(--cream);
+  /* Dark base so GSAP pin-spacer gaps (e.g. above/below the pinned About section)
+     show dark instead of leaking white. Every light section paints its own bg. */
+  background: var(--ink);
   color: var(--ink);
   font-family: "PP Neue Montreal", "Neue Montreal", "Switzer", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-weight: 400;
@@ -46,6 +48,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
+html { background: var(--ink); }
 
 img, svg { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
@@ -798,7 +801,7 @@ button { font: inherit; cursor: pointer; }
   background: var(--cycle-bg);
   color: var(--cycle-fg);
   padding: 0;
-  transition: background-color 0.6s var(--ease), color 0.6s var(--ease);
+  transition: background-color 0.25s var(--ease), color 0.25s var(--ease);
 }
 .cycle--light {
   --cycle-bg: var(--cream);
@@ -813,7 +816,7 @@ button { font: inherit; cursor: pointer; }
   padding: clamp(60px, 8vh, 100px) var(--gutter);
   border-top: 1px solid var(--cycle-line);
   border-bottom: 1px solid var(--cycle-line);
-  transition: border-color 0.6s var(--ease);
+  transition: border-color 0.25s var(--ease);
 }
 .cycle__intro-inner {
   max-width: var(--shell);
@@ -876,9 +879,20 @@ button { font: inherit; cursor: pointer; }
   grid-template-columns: 1fr 1fr;
   min-height: 100vh;
   align-items: stretch;
-  padding: clamp(20px, 3vh, 40px) 0 clamp(20px, 3vh, 40px) clamp(20px, 3vw, 40px);
+  padding: clamp(20px, 3vh, 40px) 0 0 clamp(20px, 3vw, 40px);
   gap: 0;
+  background: var(--cream);
+  color: var(--ink);
+  --cycle-fg: var(--ink);
+  --cycle-fg-muted: var(--muted);
+  --cycle-line: var(--line);
+  --cycle-cta-bg: var(--black);
+  --cycle-cta-fg: var(--white);
+  --cycle-cta-hover-bg: var(--ink);
 }
+/* Last scene keeps the same rounded corners as the others. */
+/* Full-bleed already reaches the section edges, so no last-child adjustment
+   needed. About section handles its own dark hand-off during pin. */
 .scene__media {
   position: relative;
   min-height: calc(100vh - 80px);
@@ -905,7 +919,6 @@ button { font: inherit; cursor: pointer; }
   pointer-events: none;
 }
 .scene__text { align-self: center; padding: clamp(60px, 10vh, 120px) var(--gutter); max-width: 640px; }
-/* Editorial scene layout — no pills, no cards */
 .scene__index {
   margin: 0 0 32px;
   padding: 0;
@@ -917,7 +930,6 @@ button { font: inherit; cursor: pointer; }
   color: var(--cycle-fg-muted);
   line-height: 1.4;
   display: block;
-  transition: color 0.6s var(--ease);
 }
 .scene__index span {
   color: var(--cycle-fg);
@@ -927,7 +939,6 @@ button { font: inherit; cursor: pointer; }
   margin-right: 10px;
   padding-right: 14px;
   border-right: 1px solid var(--cycle-line);
-  transition: color 0.6s var(--ease), border-color 0.6s var(--ease);
 }
 .scene__title {
   margin: 0 0 24px;
@@ -936,34 +947,32 @@ button { font: inherit; cursor: pointer; }
   letter-spacing: -0.03em;
   font-weight: 700;
   color: var(--cycle-fg);
-  transition: color 0.6s var(--ease);
 }
 .scene__body {
   margin: 0 0 40px;
   font-size: clamp(15px, 1.15vw, 18px);
   line-height: 1.65;
   color: var(--cycle-fg-muted);
-  transition: color 0.6s var(--ease);
 }
+/* Fix callout — clean rule + orange label, no card fill */
 .scene__answer {
   margin: 0;
   padding: 28px 0 0;
+  border: 0;
   border-top: 1px solid var(--cycle-line);
   background: none;
   border-radius: 0;
-  border-left: 0;
   font-size: clamp(14px, 1vw, 16px);
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--cycle-fg);
   max-width: 520px;
-  transition: color 0.6s var(--ease), border-color 0.6s var(--ease);
 }
 .scene__answer strong { font-weight: 600; color: var(--cycle-fg); }
 .scene__answer-label {
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--signal);
@@ -1081,7 +1090,7 @@ button { font: inherit; cursor: pointer; }
   font-size: clamp(22px, 2.4vw, 36px);
   line-height: 1.25;
   letter-spacing: -0.02em;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--ink);
   max-width: 900px;
 }
@@ -1216,9 +1225,27 @@ button { font: inherit; cursor: pointer; }
 .value__title { margin: 0 0 20px; font-size: clamp(28px, 3vw, 40px); line-height: 1; letter-spacing: -0.02em; font-weight: 800; }
 .value__body { margin: 0; font-size: 15px; line-height: 1.55; color: rgba(20,20,20,.72); }
 
-/* ================================================ ABOUT (pinned scroll, dark) ================================================ */
+/* ================================================ ABOUT (pinned scroll, light → dark) ================================================ */
+/* Starts LIGHT so the hand-off from the (light) last cycle scene is seamless.
+   Flips to DARK when GSAP adds .about--dark on pin (see Animations.tsx). */
 .about {
-  /* Dark theme always — no more flip from light to dark on pin */
+  --about-bg: var(--cream);
+  --about-fg: var(--ink);
+  --about-fg-soft: rgba(20, 20, 20, 0.75);
+  --about-fg-muted: rgba(20, 20, 20, 0.62);
+  --about-line-c: rgba(20, 20, 20, 0.08);
+  --about-line-strong: rgba(20, 20, 20, 0.14);
+  --about-card-bg: rgba(20, 20, 20, 0.03);
+  --about-card-bg-hover: rgba(20, 20, 20, 0.05);
+
+  position: relative;
+  background: var(--about-bg);
+  color: var(--about-fg);
+  overflow: hidden;
+  z-index: 1;
+  transition: background-color 0.6s var(--ease), color 0.6s var(--ease);
+}
+.about--dark {
   --about-bg: var(--ink);
   --about-fg: var(--white);
   --about-fg-soft: rgba(255, 255, 255, 0.75);
@@ -1227,95 +1254,130 @@ button { font: inherit; cursor: pointer; }
   --about-line-strong: rgba(255, 255, 255, 0.14);
   --about-card-bg: rgba(255, 255, 255, 0.03);
   --about-card-bg-hover: rgba(255, 255, 255, 0.05);
-
-  position: relative;
-  background: var(--about-bg);
-  color: var(--about-fg);
-  overflow: hidden;
-  z-index: 1;
 }
-/* Kept for compatibility with existing GSAP toggle — same values as default */
-.about--dark { /* no-op — About is now always dark */ }
 .about__inner {
-  max-width: var(--shell);
+  max-width: none;
   margin: 0 auto;
-  padding: 0 var(--gutter);
+  padding: clamp(90px, 12vh, 130px) 0 clamp(24px, 4vh, 48px);
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(40px, 6vw, 96px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 3.5vh, 36px);
   align-items: center;
 }
 .about__sticky {
   align-self: center;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+  align-items: center;
+  text-align: center;
+  max-width: 1500px;
+  padding: 0 var(--gutter);
 }
 .about__cards-wrap {
-  height: min(78vh, 680px);
+  width: 100%;
   overflow: hidden;
   position: relative;
 }
 .about__heading {
   margin: 0;
-  font-size: clamp(32px, 3.4vw, 48px);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  font-weight: 500;
+  font-size: clamp(44px, 5.2vw, 76px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-weight: 600;
   color: var(--about-fg);
   transition: color 0.6s var(--ease);
 }
 .about__heading em {
   font-style: italic;
-  font-weight: 400;
-  color: var(--about-fg-soft);
+  font-weight: 500;
+  color: var(--about-fg);
   transition: color 0.6s var(--ease);
 }
 .about__body {
-  margin: 4px 0 0;
-  font-size: clamp(15px, 1.1vw, 17px);
-  line-height: 1.65;
-  color: var(--about-fg-muted);
-  max-width: 460px;
-  transition: color 0.6s var(--ease);
+  margin: 10px 0 0;
+  font-size: clamp(16px, 1.15vw, 18px);
+  line-height: 1.55;
+  color: var(--about-fg);
+  opacity: 0.82;
+  max-width: 1400px;
+  transition: color 0.6s var(--ease), opacity 0.6s var(--ease);
 }
 .about__footnote {
-  margin: 16px 0 0;
+  margin: 20px 0 0;
   padding-top: 20px;
   border-top: 1px solid var(--about-line-c);
   font-size: 13px;
+  letter-spacing: 0.02em;
   line-height: 1.55;
-  color: var(--about-fg-muted);
-  max-width: 420px;
-  transition: color 0.6s var(--ease), border-color 0.6s var(--ease);
+  color: var(--about-fg);
+  opacity: 0.55;
+  max-width: 520px;
+  transition: color 0.6s var(--ease), border-color 0.6s var(--ease), opacity 0.6s var(--ease);
 }
 
-/* Right column: filled value cards with real presence */
+/* Horizontal card row — scrubbed left by the pinned About timeline */
 .about__cards {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  flex-direction: row;
+  gap: 20px;
   will-change: transform;
-  padding: 8px 0;
+  padding: 8px var(--gutter);
+  width: max-content;
 }
+.about__cards .about-card { flex: 0 0 clamp(320px, 30vw, 440px); }
 /* Kling AI style — left border accent, dimmed inactives, active is bright */
 .about-card {
   position: relative;
-  padding: 24px 32px 28px 32px;
-  border-left: 3px solid transparent;
-  background: transparent;
-  border-radius: 0;
+  padding: 28px 28px 28px;
+  height: 280px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  opacity: 0.32;
-  transition: opacity 0.5s var(--ease), border-left-color 0.5s var(--ease);
+  overflow: hidden;
+  transition:
+    background-color 0.4s var(--ease),
+    border-color 0.4s var(--ease),
+    transform 0.4s var(--ease),
+    box-shadow 0.4s var(--ease);
+}
+.about-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 60% 50% at 30% 0%, rgba(255, 255, 255, 0.08), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease);
+  pointer-events: none;
 }
 .about-card.is-active,
 .about-card:hover {
-  opacity: 1;
-  border-left-color: var(--about-fg);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-4px);
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.6);
+}
+.about-card.is-active::before,
+.about-card:hover::before { opacity: 1; }
+
+/* Light mode (About section not pinned yet) — dark card on white */
+.about:not(.about--dark) .about-card {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+.about:not(.about--dark) .about-card.is-active,
+.about:not(.about--dark) .about-card:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.16);
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.18);
+}
+.about:not(.about--dark) .about-card::before {
+  background: radial-gradient(ellipse 60% 50% at 30% 0%, rgba(0, 0, 0, 0.05), transparent 60%);
 }
 
 /* Number index — subtle uppercase eyebrow (white, not orange) */
@@ -1357,32 +1419,47 @@ button { font: inherit; cursor: pointer; }
   transition: color 0.6s var(--ease);
 }
 
-/* Arrow — smaller, positioned inline with title area */
+/* Arrow — sits in a subtle circular pill in the top-right corner */
 .about-card__arrow {
   position: absolute;
   top: 24px;
-  right: 20px;
+  right: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: var(--about-fg-muted);
-  opacity: 0.4;
-  transition: color 0.6s var(--ease), transform 0.3s var(--ease), opacity 0.3s var(--ease);
+  width: 40px;
+  height: 40px;
+  color: var(--about-fg);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  opacity: 0.55;
+  transition: color 0.6s var(--ease), border-color 0.4s var(--ease), transform 0.3s var(--ease), opacity 0.3s var(--ease);
 }
+.about:not(.about--dark) .about-card__arrow { border-color: rgba(0, 0, 0, 0.14); }
 .about-card.is-active .about-card__arrow,
-.about-card:hover .about-card__arrow { opacity: 1; }
-
-/* Intro / pull-quote card — always bright, white left accent */
-.about-card--intro {
-  padding: 24px 32px 32px 32px;
-  border-left: 3px solid var(--about-fg);
-  gap: 20px;
+.about-card:hover .about-card__arrow {
   opacity: 1;
+  transform: translate(2px, -2px);
+  border-color: var(--about-fg);
 }
-.about-card--intro.is-active,
-.about-card--intro:hover { opacity: 1; border-left-color: var(--about-fg); }
+
+/* Intro / pull-quote card — inverted (always dark surface with white text) */
+.about-card--intro {
+  padding: 36px 32px 32px;
+  gap: 20px;
+  background: var(--black);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+}
+.about-card--intro:hover {
+  background: var(--black);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.about:not(.about--dark) .about-card--intro,
+.about:not(.about--dark) .about-card--intro:hover {
+  background: var(--black);
+  border-color: rgba(255, 255, 255, 0.1);
+}
 .about-card__quotemark {
   font-family: Georgia, serif;
   font-size: 56px;
@@ -1416,8 +1493,22 @@ button { font: inherit; cursor: pointer; }
 }
 
 /* ================================================ QUOTE ================================================ */
-.quote { background: var(--cream); min-height: 100vh; padding: 80px var(--gutter); display: flex; align-items: center; text-align: left; }
-.quote__inner { max-width: var(--shell); margin: 0 auto; width: 100%; }
+/* Outer section reserves 2 viewports of scroll so the inner "pin" has room
+   to hold before the next section takes over. Sticky-pin approach — no GSAP
+   pin, no reflow tricks, no overlap issues. */
+.quote { background: var(--cream); min-height: 200vh; padding: 0 var(--gutter); text-align: left; }
+.quote__inner {
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
+  max-width: var(--shell);
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 0;
+}
 .quote__text { margin: 0; font-size: clamp(28px, 3.6vw, 60px); line-height: 1.2; letter-spacing: -0.025em; font-weight: 600; }
 .quote__word { color: rgba(0, 0, 0, 0.15); will-change: color; }
 .quote__author { margin: 40px 0 0; font-size: 15px; color: var(--muted); letter-spacing: 0.05em; }
@@ -1567,6 +1658,55 @@ button { font: inherit; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
   [data-reveal] { opacity: 1; transform: none; }
+}
+
+/* ================================================ CUSTOM CURSOR ================================================ */
+/* Only hide the native cursor while the custom one is mounted (no-op on touch). */
+.has-custom-cursor,
+.has-custom-cursor * { cursor: none; }
+/* Keep the native text caret in editable fields — replacing it is a UX regression. */
+.has-custom-cursor input,
+.has-custom-cursor textarea,
+.has-custom-cursor [contenteditable="true"] { cursor: text; }
+
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  will-change: transform, width, height, opacity;
+  mix-blend-mode: difference;
+}
+.cursor.is-visible { opacity: 1; }
+
+.cursor--dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: opacity 0.2s var(--ease), transform 0.1s var(--ease);
+}
+.cursor--dot.is-hover { opacity: 0; }
+
+.cursor--ring {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  transition:
+    width 0.25s var(--ease),
+    height 0.25s var(--ease),
+    border-color 0.25s var(--ease),
+    background-color 0.25s var(--ease),
+    opacity 0.2s var(--ease);
+}
+.cursor--ring.is-hover {
+  width: 56px;
+  height: 56px;
+  border-color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 /* ================================================ BACK TO TOP ================================================ */

@@ -2,6 +2,7 @@ import About from "@/components/About";
 import Animations from "@/components/Animations";
 import BackToTop from "@/components/BackToTop";
 import Clients from "@/components/Clients";
+import CustomCursor from "@/components/CustomCursor";
 import Cycle from "@/components/Cycle";
 import Ecosystem from "@/components/Ecosystem";
 import Footer from "@/components/Footer";
@@ -28,6 +29,7 @@ export default function Page() {
       <Footer />
       <Animations />
       <BackToTop />
+      <CustomCursor />
     </>
   );
 }

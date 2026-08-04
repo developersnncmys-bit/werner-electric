@@ -132,16 +132,17 @@ export default function Animations() {
         });
       }
 
-      /* Flip Cycle back to DARK once its last scene is nearly out of view — so the
-         hand-off to About (dark) is a seamless dark-to-dark transition, no white strip. */
+      /* Flip Cycle back to DARK before the About (dark) section enters — so the
+         hand-off is a seamless dark-to-dark transition, no white strip in between.
+         Trigger off the About section entering the bottom of the viewport, which
+         is more reliable across scroll speeds than measuring the last scene. */
       const cycleSection = document.querySelector<HTMLElement>(".cycle");
-      const lastScene = document.querySelectorAll<HTMLElement>(".scene");
-      const lastSceneEl = lastScene[lastScene.length - 1];
-      if (cycleSection && lastSceneEl) {
+      const aboutForFlip = document.querySelector<HTMLElement>(".about");
+      if (cycleSection && aboutForFlip) {
         ScrollTrigger.create({
-          trigger: lastSceneEl,
-          start: "bottom 80%",
-          end: "bottom top",
+          trigger: aboutForFlip,
+          start: "top bottom",
+          end: "top top",
           onEnter: () => cycleSection.classList.remove("cycle--light"),
           onLeaveBack: () => cycleSection.classList.add("cycle--light"),
         });
@@ -191,30 +192,24 @@ export default function Animations() {
       const aboutCardsWrap = document.querySelector<HTMLElement>(".about__cards-wrap");
       if (aboutSection && aboutCards && aboutCardsWrap && window.innerWidth > 900) {
         const startHold = 500; // px of scroll where section is pinned but cards don't move
-        const endHold = 400;   // px of scroll after cards finish before pin releases
-        /* Distance so the LAST card's center lands at wrap center at the end of translation
-           (so Equality actually reaches the "active" position before the pin releases). */
-        const getDistance = () => {
-          const cards = aboutCards.querySelectorAll<HTMLElement>(".about-card");
-          const lastCard = cards[cards.length - 1];
-          if (!lastCard) return aboutCards.scrollHeight - aboutCardsWrap.offsetHeight;
-          const lastCardCenter = lastCard.offsetTop + lastCard.offsetHeight / 2;
-          const wrapCenter = aboutCardsWrap.offsetHeight / 2;
-          return Math.max(0, lastCardCenter - wrapCenter);
-        };
+        const endHold = 200;   // px of scroll after cards finish before pin releases
+        /* Horizontal distance: scroll left until the last card's RIGHT edge lines up
+           with the wrap's right edge — no dead space after the final card. */
+        const getDistance = () =>
+          Math.max(0, aboutCards.scrollWidth - aboutCardsWrap.offsetWidth);
 
-        /* Detect which card is closest to the wrap's vertical center; add .is-active */
+        /* Detect which card is closest to the wrap's horizontal center; add .is-active */
         const cardEls = () =>
           Array.from(aboutCards.querySelectorAll<HTMLElement>(".about-card"));
         const pickActiveCard = () => {
           const wrapRect = aboutCardsWrap.getBoundingClientRect();
-          const wrapCenter = wrapRect.top + wrapRect.height / 2;
+          const wrapCenter = wrapRect.left + wrapRect.width / 2;
           let bestIdx = 0;
           let bestDist = Infinity;
           const cards = cardEls();
           cards.forEach((c, i) => {
             const r = c.getBoundingClientRect();
-            const center = r.top + r.height / 2;
+            const center = r.left + r.width / 2;
             const dist = Math.abs(center - wrapCenter);
             if (dist < bestDist) {
               bestDist = dist;
@@ -230,6 +225,7 @@ export default function Animations() {
             start: "top top",
             end: () => `+=${getDistance() + startHold + endHold}`,
             pin: true,
+            pinSpacing: true,
             scrub: 1,
             anticipatePin: 1,
             invalidateOnRefresh: true,
@@ -244,36 +240,21 @@ export default function Animations() {
         })
           .to({}, { duration: startHold })
           .to(aboutCards, {
-            y: () => -getDistance(),
+            x: () => -getDistance(),
             ease: "none",
             duration: () => getDistance(),
           })
           .to({}, { duration: endHold });
       }
 
-      /* 7c. CLIENTS — pin so viewers see the marquee cycle before scrolling on.
-         Explicit callbacks force nav to light-mode; using onUpdate as a safety net
-         because the section's own light-section watcher was removed for this section. */
+      /* 7c. CLIENTS — no pin. The marquee already scrolls the logo rows on its own,
+         and pinning a shorter-than-viewport section made it appear twice when the
+         pin released while the section was still on screen. Just handle nav theming. */
       const clientsSection = document.querySelector<HTMLElement>(".clients");
-      if (clientsSection && window.innerWidth > 900) {
-        const getNavH = () =>
-          (document.querySelector<HTMLElement>(".nav")?.offsetHeight ?? 80);
+      if (clientsSection) {
         const setNavLight = (on: boolean) => {
           document.querySelector(".nav")?.classList.toggle("nav--on-light", on);
         };
-        /* Pin — visual only, no nav toggle here */
-        ScrollTrigger.create({
-          trigger: clientsSection,
-          start: () => `top top+=${getNavH()}`,
-          end: "+=150%",
-          pin: true,
-          pinSpacing: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-        });
-
-        /* Nav-light — fires as soon as section starts entering behind nav,
-           and stays active until section fully leaves upward. Independent of pin. */
         ScrollTrigger.create({
           trigger: clientsSection,
           start: "top 90%",
@@ -285,11 +266,11 @@ export default function Animations() {
         });
       }
 
-      /* 8. QUOTE — pin section, scrub word-by-word color reveal (muted → ink).
-         Force nav to light-mode for the entire pin (the generic light-section
-         watcher misfires when the trigger element is being pinned). */
+      /* 8. QUOTE — sticky-pin via CSS (see .quote / .quote__inner), scrub word
+         colors muted → ink over the outer section's scroll range. No GSAP pin
+         means no reflow/overlap between sections. */
       const quoteSection = document.querySelector<HTMLElement>(".quote");
-      if (quoteSection && window.innerWidth > 900) {
+      if (quoteSection) {
         const words = quoteSection.querySelectorAll<HTMLElement>(".quote__word");
         if (words.length > 0) {
           gsap.set(words, { color: "rgba(0, 0, 0, 0.15)" });
@@ -301,11 +282,8 @@ export default function Animations() {
             scrollTrigger: {
               trigger: quoteSection,
               start: "top top",
-              end: "+=100%",
-              pin: true,
-              pinSpacing: true,
+              end: "bottom bottom",
               scrub: 0.5,
-              anticipatePin: 1,
               invalidateOnRefresh: true,
               toggleClass: { targets: ".nav", className: "nav--on-light" },
             },
