@@ -2,47 +2,42 @@ export default function Hero() {
   return (
     <header id="top" className="hero">
       <div className="hero__bg" aria-hidden="true">
-        <video
+        <img
           className="hero__img"
-          src="/herovideo.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
+          src="/images/hero.png"
+          alt=""
         />
         <div className="hero__vignette" />
       </div>
 
-      {/* ---------------- FRAME 1 ---------------- */}
       <div className="hero__stage">
-        <div className="hero__brand">
-          <p className="hero__eyebrow">Precision you can feel.</p>
-          <h1 className="hero__title">Werner.</h1>
+        <div className="hero__center">
+          <div className="hero__wordmark">
+            <p className="hero__eyebrow">Werner Electric</p>
+            <h1 className="hero__title">
+              One switch.<br />
+              A million shifts<span className="hero__title-dot">.</span>
+            </h1>
+          </div>
+
+          <div className="hero__statement" aria-hidden="true">
+            <p className="hero__statement-eyebrow">What Werner makes</p>
+            <p className="hero__statement-body">
+              Pushbuttons, switches, pilot lights.<br />
+              Six series. Panel ready. Plant tested.<br />
+              Built by hand for a million clean cycles.
+            </p>
+          </div>
         </div>
 
         <div className="hero__side">
-          <p className="hero__lede">
-            Push buttons, switches, relays, signaling &mdash; engineered on real shop
-            floors, built to feel right for a million cycles.
-          </p>
-          <p className="hero__scroll-cue">Scroll to explore.</p>
+          <div className="hero__side-1">
+            <p className="hero__sub">
+              Every switch soldered, tuned and tested by hand.
+            </p>
+            <p className="hero__cue">Scroll to learn more.</p>
+          </div>
         </div>
-      </div>
-
-      {/* ---------------- FRAME 2 (centered, revealed on scroll) ---------------- */}
-      <div className="hero__frame2" aria-hidden="true">
-        <p className="hero__frame2-brand">WERNER ELECTRIC</p>
-        <p className="hero__frame2-desc">
-          Clean design. Bulletproof consistency. Intuitive builds.
-          <br />
-          Trusted across India and Turkey &mdash; from a single pilot light to a full
-          control room.
-        </p>
-      </div>
-
-      <div className="hero__scroll" aria-hidden="true">
-        <span className="hero__scroll-line" />
       </div>
     </header>
   );

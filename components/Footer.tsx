@@ -3,6 +3,28 @@
 export default function Footer() {
   return (
     <footer className="footer">
+      <div className="footer__newsletter">
+        <h3 className="footer__newsletter-h">
+          Get the Werner catalog. Every series, every spec.
+        </h3>
+        <form
+          className="footer__newsletter-form"
+          onSubmit={(e) => e.preventDefault()}
+          aria-label="Newsletter signup"
+        >
+          <input
+            type="email"
+            className="footer__newsletter-input"
+            placeholder="Work email"
+            aria-label="Email"
+            required
+          />
+          <button type="submit" className="footer__newsletter-btn">
+            Send catalog
+          </button>
+        </form>
+      </div>
+
       <div className="footer__top">
         <div className="footer__brand">
           <p className="footer__logo">
