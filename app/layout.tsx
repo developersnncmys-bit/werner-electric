@@ -5,6 +5,11 @@ export const metadata: Metadata = {
   title: "Werner Electric — Control that endures every shift.",
   description:
     "Werner Electric — specialists in push buttons, switches, relays and signaling devices for industry. Engineered in India and Turkey.",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
