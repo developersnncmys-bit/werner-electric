@@ -216,24 +216,52 @@ function SwitchModel({
     wrapper.scale.setScalar(scale);
     baseScaleRef.current = scale;
 
+    // Names/keywords that identify the third-party ETI brand decal baked
+    // into the GLB. Any mesh (or material) matching any of these gets
+    // hidden. Doesn't modify the .gltf file — pure runtime filter.
+    const HIDE_PATTERNS = ["eti", "logo", "decal", "brand", "label", "watermark"];
+    const shouldHide = (s: string | undefined | null) => {
+      if (!s) return false;
+      const lower = s.toLowerCase();
+      return HIDE_PATTERNS.some((p) => lower.includes(p));
+    };
+
+    // One-time debug: list every mesh name so we can identify the ETI mesh
+    // if the pattern above misses it. Remove after verifying.
+    const meshNames: string[] = [];
+
     scene.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
       if (!mesh.isMesh) return;
+
+      const matArr = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const matNames = matArr.map((m) => (m ? m.name : "")).filter(Boolean).join(",");
+      meshNames.push(`${mesh.name || "(unnamed)"}  [mat: ${matNames || "(none)"}]`);
+
+      // Hide by mesh name OR by material name (branding is often a separately-named material)
+      if (shouldHide(mesh.name) || matArr.some((m) => shouldHide(m?.name))) {
+        mesh.visible = false;
+        return;
+      }
+
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      mats.forEach((m) => {
+      matArr.forEach((m) => {
         const std = m as THREE.MeshStandardMaterial;
         if (!std || !(std as unknown as { isMeshStandardMaterial?: boolean }).isMeshStandardMaterial) return;
-        // Split by metalness so plastic doesn't blow out and metals get real reflections
         if (std.metalness !== undefined && std.metalness > 0.5) {
-          std.envMapIntensity = 1.4;   // metal — real reflections
+          std.envMapIntensity = 1.4;
         } else {
-          std.envMapIntensity = 0.7;   // plastic / paint — controlled highlights, no wash-out
+          std.envMapIntensity = 0.7;
         }
         std.needsUpdate = true;
       });
     });
+
+    if (typeof window !== "undefined") {
+      // eslint-disable-next-line no-console
+      console.info("[SwitchShowcase] meshes in GLB:\n" + meshNames.join("\n"));
+    }
 
     onReady();
   }, [scene, onReady]);

@@ -114,7 +114,7 @@ const shifts: Shift[] = [
     time: "02:00",
     hueClass: "shift--deep",
     pilot: "moon",
-    image: "https://images.pexels.com/photos/14251843/pexels-photo-14251843.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    image: "https://images.pexels.com/photos/3582392/pexels-photo-3582392.jpeg?auto=compress&cs=tinysrgb&w=1600",
     cost: "The 100,000th press has to feel like the first.",
     title: "From first start to final stop.",
     body: (

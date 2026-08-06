@@ -52,7 +52,7 @@ export default function Animations() {
             start: "top top",
             end: "+=80%",
             pin: true,
-            scrub: 0.6,
+            scrub: 1,
             anticipatePin: 1,
           },
         })
@@ -405,7 +405,7 @@ export default function Animations() {
               trigger: shift,
               start: "top bottom",
               end: "bottom top",
-              scrub: true,
+              scrub: 1.2,
             },
           }
         );
@@ -452,7 +452,7 @@ export default function Animations() {
             trigger: featuresHero,
             start: "top top",
             end: "bottom bottom",
-            scrub: 0.8,
+            scrub: 1,
           },
         });
       }
@@ -484,7 +484,7 @@ export default function Animations() {
               trigger: quoteSection,
               start: "top top",
               end: "bottom bottom",
-              scrub: 0.5,
+              scrub: 0.8,
             },
           });
         }

@@ -33,17 +33,22 @@ export default function CustomCursor() {
       ring.classList.remove("is-visible");
     };
 
+    // mousemove only captures coordinates — no DOM writes here.
+    // Both dot and ring are written once per animation frame inside tick(),
+    // so cursor updates run at 60fps and don't compete with mousemove burst.
     const onMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
       showCursor();
     };
 
     let rafId = 0;
     const tick = () => {
-      ringX += (mouseX - ringX) * 0.18;
-      ringY += (mouseY - ringY) * 0.18;
+      // Dot: snap to mouse this frame — feels instant
+      dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+      // Ring: soft trailing follow
+      ringX += (mouseX - ringX) * 0.35;
+      ringY += (mouseY - ringY) * 0.35;
       ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
       rafId = requestAnimationFrame(tick);
     };

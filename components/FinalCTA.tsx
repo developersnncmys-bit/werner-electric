@@ -20,15 +20,13 @@ export default function FinalCTA() {
           </a>
         </div>
 
-        <div className="final__video" aria-label="Factory floor footage">
-          <video
+        <div className="final__video" aria-label="Power plant control room">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             className="final__video-media"
-            src="https://videos.pexels.com/video-files/26569059/11965509_3840_2160_24fps.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
+            src="https://images.pexels.com/photos/55830/power-plant-control-room-electric-old-55830.jpeg?cs=srgb&w=1920&fm=jpg"
+            alt="Power plant control room with banks of analog panels and dials"
+            loading="lazy"
           />
           <div className="final__video-overlay" aria-hidden="true" />
           <span className="final__video-tag">
