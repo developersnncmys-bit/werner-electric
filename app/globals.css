@@ -141,10 +141,28 @@ button { font: inherit; cursor: pointer; }
   letter-spacing: 0.28em; text-transform: uppercase;
   color: rgba(255,255,255,0.55);
 }
+/* @property lets us animate an integer custom prop that CSS content:
+   counter() renders as text. Runs on the compositor — never blocked by
+   the main thread, so the counter climbs perfectly smoothly even while
+   React is mounting the rest of the page. */
+@property --preloader-n {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
 .preloader__count-num {
   font-size: clamp(36px, 3.4vw, 52px);
   font-weight: 700; letter-spacing: -0.02em; line-height: 1;
   font-variant-numeric: tabular-nums;
+  --preloader-n: 0;
+  counter-reset: preloader-count var(--preloader-n);
+  animation: preloader-count-up 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.preloader__count-num::after {
+  content: counter(preloader-count);
+}
+@keyframes preloader-count-up {
+  to { --preloader-n: 100; }
 }
 @keyframes preloader-fade-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes preloader-glow-in { from { opacity: 0; transform: translate(-50%,-50%) scaleX(0.6); } to { opacity: 1; transform: translate(-50%,-50%) scaleX(1); } }
