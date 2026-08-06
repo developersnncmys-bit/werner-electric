@@ -3,29 +3,58 @@
 import { useEffect, useState } from "react";
 
 export default function Preloader() {
+  const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(true);
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
 
-    // Counter itself is CSS-animated (see .preloader__count-num rule).
-    // JS only schedules the exit. Because the counter runs on the
-    // compositor via @property, it's immune to main-thread jank —
-    // stays perfectly smooth even while React mounts the rest of the
-    // page tree.
-    const COUNT_DURATION = 1500;
-    const EXIT_ANIM = 700;
-    const startExit = window.setTimeout(() => {
-      setExiting(true);
-      window.setTimeout(() => {
+    let stopped = false;
+    let interval: ReturnType<typeof setInterval> | null = null;
+    let safetyTimer: ReturnType<typeof setTimeout> | null = null;
+    const started = performance.now();
+
+    const startExit = () => {
+      if (stopped) return;
+      stopped = true;
+      if (interval) clearInterval(interval);
+      if (safetyTimer) clearTimeout(safetyTimer);
+      setProgress(100);
+      setTimeout(() => setExiting(true), 80);
+      setTimeout(() => {
         setVisible(false);
         document.body.style.overflow = "";
-      }, EXIT_ANIM);
-    }, COUNT_DURATION);
+      }, 80 + 500);
+    };
+
+    // Ambient counter — climbs 0→92 smoothly while the page loads
+    let current = 0;
+    interval = setInterval(() => {
+      current = Math.min(92, current + Math.random() * 10 + 3);
+      setProgress(Math.floor(current));
+    }, 100);
+
+    // Exit when the page has finished loading (min 400ms display)
+    const MIN_DISPLAY = 400;
+    const onReady = () => {
+      const elapsed = performance.now() - started;
+      setTimeout(startExit, Math.max(0, MIN_DISPLAY - elapsed));
+    };
+
+    if (document.readyState === "complete") {
+      onReady();
+    } else {
+      window.addEventListener("load", onReady, { once: true });
+    }
+
+    // Safety net: force exit after 5s no matter what
+    safetyTimer = setTimeout(startExit, 5000);
 
     return () => {
-      window.clearTimeout(startExit);
+      if (interval) clearInterval(interval);
+      if (safetyTimer) clearTimeout(safetyTimer);
+      window.removeEventListener("load", onReady);
       document.body.style.overflow = "";
     };
   }, []);
@@ -41,7 +70,7 @@ export default function Preloader() {
         {/* Loading counter — top left */}
         <div className="preloader__count-wrap">
           <span className="preloader__count-label">Loading</span>
-          <span className="preloader__count-num" />
+          <span className="preloader__count-num">{progress}</span>
         </div>
 
         {/* Bottom-right locale */}
