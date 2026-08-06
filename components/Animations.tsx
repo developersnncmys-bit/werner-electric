@@ -7,16 +7,30 @@ import Lenis from "lenis";
 
 export default function Animations() {
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
+    // Defer all heavy Lenis/GSAP/ScrollTrigger setup until the preloader
+    // has run. Otherwise the synchronous work here (Lenis init, GSAP
+    // context, ScrollTrigger measurements, GlobalBall positioning)
+    // blocks the main thread and the preloader's rAF counter stutters
+    // mid-count. Preloader lifecycle: 1500ms climb + 100ms + 600ms exit
+    // = 2200ms — we defer by 2300ms to be safely past the exit anim.
+    let disposed = false;
+    let cleanup: (() => void) | null = null;
+    const setupTimer = setTimeout(() => {
+      if (disposed) return;
+      cleanup = runSetup();
+    }, 2300);
 
-    const prefersReduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function runSetup(): (() => void) | null {
+      gsap.registerPlugin(ScrollTrigger);
 
-    if (prefersReduced) {
-      document.querySelectorAll("[data-reveal]").forEach((el) => el.classList.add("is-in"));
-      return;
-    }
+      const prefersReduced =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (prefersReduced) {
+        document.querySelectorAll("[data-reveal]").forEach((el) => el.classList.add("is-in"));
+        return null;
+      }
 
     /* -------------------------------------------------- SMOOTH SCROLL
        Lenis wraps the native scroll with a lerped/inertia-based one that
@@ -805,18 +819,25 @@ export default function Animations() {
       }
     });
 
-    const onLoad = () => ScrollTrigger.refresh();
-    window.addEventListener("load", onLoad);
+      const onLoad = () => ScrollTrigger.refresh();
+      window.addEventListener("load", onLoad);
+
+      return () => {
+        window.removeEventListener("load", onLoad);
+        ballSafetyCleanup?.();
+        // Tear down Lenis — stop its raf hook, remove scroll listener,
+        // destroy the instance so it doesn't keep processing scroll after
+        // hot reload / unmount.
+        gsap.ticker.remove(lenisTick);
+        lenis.destroy();
+        ctx.revert();
+      };
+    }
 
     return () => {
-      window.removeEventListener("load", onLoad);
-      ballSafetyCleanup?.();
-      // Tear down Lenis — stop its raf hook, remove scroll listener,
-      // destroy the instance so it doesn't keep processing scroll after
-      // hot reload / unmount.
-      gsap.ticker.remove(lenisTick);
-      lenis.destroy();
-      ctx.revert();
+      disposed = true;
+      clearTimeout(setupTimer);
+      if (cleanup) cleanup();
     };
   }, []);
 
