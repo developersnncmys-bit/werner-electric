@@ -204,71 +204,9 @@ export default function Cycle() {
   return (
     <section className="cycle" id="story">
       <div className="cycle__intro">
-        {/* Persistent scroll marker — ball descends into the cycle and
-            parks in the viewport; the time label next to it updates as
-            each shift scrolls through, so the ball acts as the running
-            "clock" for the current shift. */}
-        <div className="cycle__marker" aria-hidden="true">
-          <div className="cycle__marker-orb">
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <radialGradient id="marker-cap-red" cx="34%" cy="26%" r="62%">
-                  <stop offset="0%" stopColor="#ff8b78" />
-                  <stop offset="10%" stopColor="#e0402c" />
-                  <stop offset="55%" stopColor="#c8291a" />
-                  <stop offset="100%" stopColor="#8a1810" />
-                </radialGradient>
-                <radialGradient id="marker-cap-green" cx="34%" cy="26%" r="62%">
-                  <stop offset="0%" stopColor="#8ce7ac" />
-                  <stop offset="10%" stopColor="#2fb56a" />
-                  <stop offset="55%" stopColor="#1e8a4e" />
-                  <stop offset="100%" stopColor="#0f5a30" />
-                </radialGradient>
-                <radialGradient id="marker-cap-amber" cx="34%" cy="26%" r="62%">
-                  <stop offset="0%" stopColor="#ffd47a" />
-                  <stop offset="10%" stopColor="#f5a623" />
-                  <stop offset="55%" stopColor="#c8790a" />
-                  <stop offset="100%" stopColor="#7a4a08" />
-                </radialGradient>
-                <radialGradient id="marker-bezel-metal" cx="50%" cy="30%">
-                  <stop offset="0%" stopColor="#e8e8e8" />
-                  <stop offset="55%" stopColor="#9a9a9a" />
-                  <stop offset="100%" stopColor="#3a3a3a" />
-                </radialGradient>
-                <linearGradient id="marker-bezel-inner" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#4a4a4a" />
-                  <stop offset="100%" stopColor="#1a1a1a" />
-                </linearGradient>
-              </defs>
-              {/* Bezel */}
-              <circle cx="100" cy="100" r="98" fill="url(#marker-bezel-metal)" />
-              <circle cx="100" cy="100" r="86" fill="url(#marker-bezel-inner)" />
-              <circle cx="100" cy="100" r="82" fill="none" stroke="#0a0a0a" strokeWidth="0.5" opacity="0.4" />
-              {/* Cap — solid + gradient overlay. Color flips via .cycle__marker--green */}
-              <circle className="marker-cap-solid" cx="100" cy="100" r="82" fill="#c8291a" />
-              <circle className="marker-cap-gradient" cx="100" cy="100" r="82" fill="url(#marker-cap-red)" opacity="0.85" />
-              {/* Highlight */}
-              <ellipse cx="78" cy="66" rx="30" ry="16" fill="#ffffff" opacity="0.45" />
-              <ellipse cx="88" cy="60" rx="14" ry="6" fill="#ffffff" opacity="0.6" />
-              {/* WERNER mark */}
-              <text
-                x="100"
-                y="150"
-                textAnchor="middle"
-                fill="#4a0d05"
-                fontSize="9"
-                fontFamily="Switzer, sans-serif"
-                fontWeight="700"
-                letterSpacing="0.28em"
-              >
-                WERNER
-              </text>
-            </svg>
-          </div>
-          <span className="cycle__marker-time" data-current-time="06:00">
-            06:00
-          </span>
-        </div>
+        {/* The persistent scroll marker (ball + running time label) is
+            rendered by <GlobalBall /> at page root. GSAP drives its
+            fade-in / rise / color-flip / time-tick from Animations.tsx. */}
 
         <div className="cycle__intro-row">
           <div className="cycle__aside">

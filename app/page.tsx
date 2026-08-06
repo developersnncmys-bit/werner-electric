@@ -1,11 +1,10 @@
 import Animations from "@/components/Animations";
-import BackToTop from "@/components/BackToTop";
 import Clients from "@/components/Clients";
-import CustomCursor from "@/components/CustomCursor";
 import Cycle from "@/components/Cycle";
 import FeatureGrid from "@/components/FeatureGrid";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
+import GlobalBall from "@/components/GlobalBall";
 import Hero from "@/components/Hero";
 import Nav from "@/components/Nav";
 import Preloader from "@/components/Preloader";
@@ -29,9 +28,8 @@ export default function Page() {
       <TechDetails />
       <FinalCTA />
       <Footer />
+      <GlobalBall />
       <Animations />
-      <BackToTop />
-      <CustomCursor />
     </>
   );
 }

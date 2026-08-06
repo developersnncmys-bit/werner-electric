@@ -33,10 +33,24 @@
 
 /* ------------------ RESET ------------------ */
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; background: var(--black); }
+html { -webkit-text-size-adjust: 100%; background: var(--white); }
+
+/* ------------------ LENIS SMOOTH SCROLL ------------------
+   Lenis takes over scroll and wants scroll-behavior:auto so native
+   anchor jumps don't fight its lerp. It auto-adds .lenis and
+   .lenis-smooth classes to <html>. */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-scrolling iframe { pointer-events: none; }
 body {
   margin: 0;
-  background: var(--black);
+  /* Body is WHITE so the reframe section (transparent, z-index above ball)
+     reveals white underneath the ball. Every other section paints its own
+     background explicitly (hero/features/clients/footer dark, trial/quote/
+     tech/cycle light), so this default only shows through reframe. */
+  background: var(--white);
   color: var(--white);
   font-family: "Switzer", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-weight: 400;
@@ -57,10 +71,10 @@ button { font: inherit; cursor: pointer; }
   background: var(--black); color: var(--white);
   overflow: hidden;
   transform: translateY(0);
-  transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1);
+  transition: transform 0.5s cubic-bezier(0.76, 0, 0.24, 1);
 }
 .preloader--exit { transform: translateY(-100%); pointer-events: none; }
-.preloader--exit .preloader__content { opacity: 0; transition: opacity 0.4s var(--ease); }
+.preloader--exit .preloader__content { opacity: 0; transition: opacity 0.25s var(--ease); }
 
 .preloader__content {
   position: absolute; inset: 0;
@@ -380,14 +394,23 @@ button { font: inherit; cursor: pointer; }
    highlight fading in, revealing a physical pushbutton
    5) button slides downward into the next (dark) section.
 
-   The button is absolutely positioned; a transparent .reframe__button-slot
-   inside the H2 reserves inline space so the headline layout is stable. */
+   The ball itself is the shared .global-ball (rendered by <GlobalBall />
+   at page root, position: fixed); a transparent .reframe__slot inside the
+   H2 reserves inline space so the headline layout is stable and GSAP can
+   measure it to position the ball. */
 .reframe {
   position: relative;
   height: 100vh;
-  background: #ffffff;
+  /* Transparent so the fixed .global-ball (z-20 at doc root) is visible
+     THROUGH reframe on top of the body's white bg. Reframe itself sits
+     ABOVE the ball via z-25, so all reframe children (headline, body,
+     eyebrow) render on top of the ball — the red wash during EXPAND
+     doesn't hide the white "Control that endures every shift." headline. */
+  background: transparent;
   color: var(--black);
   overflow: hidden;
+  z-index: 25;
+  isolation: isolate;
 }
 /* Grid removed — clean industrial background only */
 .reframe__sticky {
@@ -396,39 +419,32 @@ button { font: inherit; cursor: pointer; }
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: clamp(80px, 12vh, 140px) var(--gutter) clamp(80px, 12vh, 120px);
-  /* overflow visible so the descending button isn't clipped by the sticky
-     bottom edge; .reframe parent is also overflow:visible */
+  /* overflow visible so descending elements aren't clipped by the sticky
+     bottom edge; .reframe parent is also overflow:visible. (The ball itself
+     is position: fixed at page root, so clipping here can't affect it.) */
   overflow: visible;
   z-index: 1;
 }
 
-/* Invisible inline slot inside the H2 — reserves the headline gap so the
-   text wraps as if the button were there. GSAP measures this slot's rect
-   on mount and places .reframe__button over it. */
+/* Inline slot inside the H2 — reserves the headline gap ONLY while
+   the reframe pin is engaged (ball visible in the slot). Default width
+   is 0 so before the pin engages the headline reads as "Control that"
+   with no awkward empty gap. GSAP animates the width open at pin start
+   (HOLD phase) and closed again at EXPAND. The slot itself is
+   visibility: hidden — it's purely a layout anchor GSAP measures. */
 .reframe__slot {
   display: inline-block;
   vertical-align: middle;
-  width: clamp(90px, 9vw, 150px);
+  width: 0;
   height: clamp(70px, 7vw, 120px);
   visibility: hidden;
   pointer-events: none;
 }
 
-/* The RED PUSHBUTTON — absolutely positioned, INDEPENDENT of the H2.
-   This is critical: keeping it outside the H2 means fading the H2 out
-   during the wash phase does NOT fade the button (children inherit
-   visibility:hidden). GSAP takes over placement on mount. */
-.reframe__button {
-  position: absolute;
-  top: 0; left: 0;
-  width: clamp(90px, 9vw, 150px);
-  height: clamp(90px, 9vw, 150px);
-  transform-origin: center center;
-  z-index: 5;
-  pointer-events: none;
-  will-change: transform, opacity;
-  filter: drop-shadow(0 14px 32px rgba(138, 24, 16, 0.35));
-}
+/* The RED PUSHBUTTON is now the shared .global-ball (rendered at page
+   root by <GlobalBall />). CSS rules for the ball live in the
+   "GLOBAL BALL" section below. Only the SVG child + bezel/highlight/mark
+   utility rules remain here because Animations.tsx queries them by class. */
 .reframe__button-svg { width: 100%; height: 100%; overflow: visible; }
 /* Bezel + highlight start invisible; fade in during the CONTRACT phase */
 .reframe__btn-bezel { opacity: 0; will-change: opacity; }
@@ -484,15 +500,24 @@ button { font: inherit; cursor: pointer; }
   gap: clamp(40px, 6vh, 80px);
   position: relative;
 }
-/* The red-switch landing marker — POSITION FIXED so it lives on the viewport
-   and doesn't scroll away with the page. GSAP animates its top/scale/opacity
-   based on scroll through the cycle section, so every scroll tick visibly
-   moves it down through the viewport (like heavn's persistent yellow orb). */
-.cycle__marker {
+/* ============================================================ GLOBAL BALL
+   ONE shared DOM element that plays BOTH roles:
+   (a) the reframe pushbutton that expands into the red wash and settles
+       into a physical switch, then descends
+   (b) the persistent cycle marker/clock — fades in at ~78vh, rises to
+       ~14vh sticky, ticks the time label, flips green/amber/red
+   Position: fixed at page root so it survives across the reframe → cycle
+   transition without unmounting (which used to cause a jump-cut between
+   two separate SVGs). GSAP sets left/top directly using viewport coords
+   from getBoundingClientRect on the reframe slot. */
+.global-ball {
   position: fixed;
   top: 0;
-  left: 50%;
-  transform: translate(-50%, 0);
+  left: 0;
+  width: clamp(90px, 9vw, 150px);
+  /* No fixed height — .global-ball-orb sizes itself; the time span sits
+     inline next to it. Layout matches the old .cycle__marker flex row. */
+  transform-origin: center center;
   z-index: 20;
   pointer-events: none;
   display: flex;
@@ -500,25 +525,25 @@ button { font: inherit; cursor: pointer; }
   gap: clamp(14px, 1.4vw, 22px);
   opacity: 0;
   visibility: hidden;
-  will-change: transform, opacity, top;
+  will-change: transform, opacity, top, left;
+  filter: drop-shadow(0 14px 32px rgba(138, 24, 16, 0.35));
 }
-.cycle__marker-orb {
-  width: clamp(32px, 3.4vw, 52px);
+.global-ball-orb {
+  width: clamp(90px, 9vw, 150px);
   aspect-ratio: 1;
   flex-shrink: 0;
-  filter: drop-shadow(0 6px 16px rgba(138, 24, 16, 0.28));
 }
-.cycle__marker-orb svg { width: 100%; height: 100%; display: block; }
-.cycle__marker-orb .marker-cap-solid,
-.cycle__marker-orb .marker-cap-gradient { transition: fill 0.6s var(--ease); }
-.cycle__marker--green .marker-cap-solid { fill: #1e8a4e; }
-.cycle__marker--green .marker-cap-gradient { fill: url(#marker-cap-green); }
-.cycle__marker--green { filter: drop-shadow(0 10px 24px rgba(30, 138, 78, 0.32)); }
-.cycle__marker--amber .marker-cap-solid { fill: #c8790a; }
-.cycle__marker--amber .marker-cap-gradient { fill: url(#marker-cap-amber); }
-.cycle__marker--amber { filter: drop-shadow(0 10px 24px rgba(200, 121, 10, 0.32)); }
-.cycle__marker-time {
-  font-size: clamp(20px, 2.4vw, 36px);
+.global-ball-orb svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.global-ball-orb .global-ball-cap-solid,
+.global-ball-orb .global-ball-cap-gradient { transition: fill 0.6s var(--ease); }
+.global-ball--green .global-ball-cap-solid { fill: #1e8a4e; }
+.global-ball--green .global-ball-cap-gradient { fill: url(#marker-cap-green); }
+.global-ball--green { filter: drop-shadow(0 10px 24px rgba(30, 138, 78, 0.32)); }
+.global-ball--amber .global-ball-cap-solid { fill: #c8790a; }
+.global-ball--amber .global-ball-cap-gradient { fill: url(#marker-cap-amber); }
+.global-ball--amber { filter: drop-shadow(0 10px 24px rgba(200, 121, 10, 0.32)); }
+.global-ball-time {
+  font-size: clamp(32px, 4vw, 58px);
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1;
@@ -529,9 +554,9 @@ button { font: inherit; cursor: pointer; }
   will-change: opacity;
   transition: opacity 0.25s var(--ease);
 }
-.cycle__marker-time.is-visible { opacity: 1; }
+.global-ball-time.is-visible { opacity: 1; }
 /* On dark shift backgrounds (night, deep), flip time text color to white */
-.cycle__marker--dark .cycle__marker-time { color: var(--white); }
+.global-ball--dark .global-ball-time { color: var(--white); }
 
 .cycle__intro-row {
   width: 100%;
@@ -587,7 +612,7 @@ button { font: inherit; cursor: pointer; }
 /* Dark mode kicks in when the 22:00 (night) shift reaches the viewport top —
    Animations.tsx toggles .shift--is-dark on the night and deep shifts. */
 .shift--is-dark {
-  --shift-bg: #0a0a12;
+  --shift-bg: #1e1e21;
   --shift-fg: var(--white);
   --shift-fg-muted: rgba(255,255,255,0.6);
   --shift-line: rgba(255,255,255,0.1);
@@ -984,12 +1009,6 @@ button { font: inherit; cursor: pointer; }
   font-variant-numeric: tabular-nums;
 }
 
-/* Hide the site's CustomCursor while the pointer is over this cinematic
-   section — feels like a controlled product reveal, not a 3D viewer. */
-body.werner-cinematic-hover .cursor {
-  opacity: 0 !important;
-}
-
 /* Responsive — tablet / mobile.
    Product stays centered; engineering copy stacks below product on small
    screens so it doesn't overlap the switch. */
@@ -1089,7 +1108,6 @@ body.werner-cinematic-hover .cursor {
 .quote {
   background: var(--cream);
   color: var(--ink);
-  min-height: 200vh;
   position: relative;
 }
 .quote__portrait {
@@ -1111,11 +1129,9 @@ body.werner-cinematic-hover .cursor {
   display: block;
 }
 .quote__inner {
-  position: sticky; top: 0;
-  min-height: 100vh;
   max-width: var(--shell);
   margin: 0 auto;
-  padding: clamp(80px, 12vh, 140px) var(--gutter);
+  padding: clamp(120px, 18vh, 200px) var(--gutter);
   display: flex; flex-direction: column;
   justify-content: center;
 }
@@ -1128,7 +1144,12 @@ body.werner-cinematic-hover .cursor {
   color: var(--ink);
   max-width: 42ch;
 }
-.quote__word { color: rgba(0,0,0,0.15); will-change: color; }
+.quote__word {
+  color: rgba(0,0,0,0.15);
+  transition: color 0.25s var(--ease);
+  will-change: color;
+}
+.quote__word[data-revealed="true"] { color: #141414; }
 .quote__attr {
   margin: clamp(32px, 5vh, 48px) 0 0;
   font-size: clamp(16px, 1.3vw, 20px);
@@ -1521,32 +1542,6 @@ body.werner-cinematic-hover .cursor {
 }
 .footer__social a:hover { background: var(--white); color: var(--black); }
 
-/* ============================================================ CUSTOM CURSOR ============================================================ */
-.has-custom-cursor, .has-custom-cursor * { cursor: none; }
-.has-custom-cursor input, .has-custom-cursor textarea, .has-custom-cursor [contenteditable="true"] { cursor: text; }
-.cursor {
-  position: fixed; top: 0; left: 0;
-  pointer-events: none; z-index: 9999;
-  opacity: 0;
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  will-change: transform, width, height, opacity;
-  mix-blend-mode: difference;
-}
-.cursor.is-visible { opacity: 1; }
-.cursor--dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #ffffff;
-  transition: opacity 0.2s var(--ease);
-}
-.cursor--dot.is-hover { opacity: 0; }
-.cursor--ring {
-  width: 32px; height: 32px; border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.7);
-  transition: width 0.25s var(--ease), height 0.25s var(--ease), border-color 0.25s var(--ease), background-color 0.25s var(--ease), opacity 0.2s var(--ease);
-}
-.cursor--ring.is-hover { width: 56px; height: 56px; border-color: rgba(255,255,255,0.95); background: rgba(255,255,255,0.12); }
-
 /* ============================================================ BACK TO TOP ============================================================ */
 .back-to-top {
   position: fixed;
@@ -1607,14 +1602,12 @@ body.werner-cinematic-hover .cursor {
   .reframe__title { font-size: clamp(36px, 8vw, 72px); max-width: 18ch; }
   .reframe__body { font-size: clamp(14px, 2.2vw, 17px); margin-top: clamp(24px, 4vh, 40px); max-width: 90%; }
   .reframe__eyebrow { font-size: clamp(12px, 2vw, 14px); bottom: clamp(20px, 3vh, 40px); }
-  /* Slot inside headline — shrink so the button clamp matches on tablet */
+  /* Slot inside headline — shrink so the ball clamp matches on tablet */
   .reframe__slot { width: clamp(70px, 9vw, 110px); height: clamp(55px, 7vw, 85px); }
-  .reframe__button { width: clamp(70px, 9vw, 110px); height: clamp(70px, 9vw, 110px); }
-
-  /* CYCLE MARKER — smaller orb + slightly smaller time font; do NOT change top values */
-  .cycle__marker { gap: clamp(10px, 1.6vw, 16px); }
-  .cycle__marker-orb { width: clamp(28px, 4.6vw, 44px); }
-  .cycle__marker-time { font-size: clamp(16px, 3vw, 26px); }
+  /* Global ball — tablet size (used during both reframe pin + cycle marker phases) */
+  .global-ball { width: clamp(70px, 9vw, 110px); gap: clamp(10px, 1.6vw, 16px); }
+  .global-ball-orb { width: clamp(70px, 9vw, 110px); }
+  .global-ball-time { font-size: clamp(16px, 3vw, 26px); }
 
   /* SHIFT — media becomes full width on collapsed grid; text padding shrinks */
   .shift__media { width: 100%; min-height: 60vh; }
@@ -1680,16 +1673,15 @@ body.werner-cinematic-hover .cursor {
   .reframe__body { font-size: 14px; line-height: 1.55; margin-top: 22px; }
   .reframe__eyebrow { font-size: 11px; bottom: 20px; left: var(--gutter); }
   .reframe__slot { width: clamp(56px, 12vw, 84px); height: clamp(44px, 9vw, 66px); }
-  .reframe__button { width: clamp(56px, 12vw, 84px); height: clamp(56px, 12vw, 84px); }
   .reframe__sticky { padding: clamp(60px, 10vh, 100px) var(--gutter) clamp(60px, 10vh, 100px); }
 
-  /* CYCLE — heading + marker further shrunk; hide time label on very small screens */
+  /* CYCLE — heading further shrunk; ball + time label sized for mobile */
   .cycle__heading { font-size: clamp(22px, 5.4vw, 32px); padding: 0 var(--gutter); }
   .cycle__aside { padding: 0 var(--gutter); }
   .cycle__lede { font-size: clamp(15px, 3.4vw, 18px); }
-  .cycle__marker { gap: 10px; }
-  .cycle__marker-orb { width: 26px; }
-  .cycle__marker-time { font-size: 14px; }
+  .global-ball { width: clamp(56px, 12vw, 84px); gap: 10px; }
+  .global-ball-orb { width: clamp(56px, 12vw, 84px); }
+  .global-ball-time { font-size: 14px; }
 
   /* SHIFT */
   .shift__media { min-height: 46vh; }

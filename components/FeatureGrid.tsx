@@ -1,4 +1,11 @@
-import SwitchShowcase from "./SwitchShowcase";
+"use client";
+
+import dynamic from "next/dynamic";
+
+const SwitchShowcase = dynamic(() => import("./SwitchShowcase"), {
+  ssr: false,
+  loading: () => <div style={{ width: "100%", height: "100%", background: "#000" }} />,
+});
 
 const cards = [
   {

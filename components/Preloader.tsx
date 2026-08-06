@@ -10,30 +10,51 @@ export default function Preloader() {
   useEffect(() => {
     document.body.style.overflow = "hidden";
 
-    const duration = 1700;
-    const start = performance.now();
-    let raf = 0;
+    let stopped = false;
+    let interval: ReturnType<typeof setInterval> | null = null;
+    let safetyTimer: ReturnType<typeof setTimeout> | null = null;
+    const started = performance.now();
 
-    const tick = (t: number) => {
-      const elapsed = t - start;
-      const p = Math.min(1, elapsed / duration);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setProgress(Math.floor(eased * 100));
-      if (p < 1) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setProgress(100);
-        setTimeout(() => setExiting(true), 250);
-        setTimeout(() => {
-          setVisible(false);
-          document.body.style.overflow = "";
-        }, 250 + 900);
-      }
+    const startExit = () => {
+      if (stopped) return;
+      stopped = true;
+      if (interval) clearInterval(interval);
+      if (safetyTimer) clearTimeout(safetyTimer);
+      setProgress(100);
+      setTimeout(() => setExiting(true), 80);
+      setTimeout(() => {
+        setVisible(false);
+        document.body.style.overflow = "";
+      }, 80 + 500);
     };
-    raf = requestAnimationFrame(tick);
+
+    // Ambient counter — climbs 0→92 smoothly while the page loads
+    let current = 0;
+    interval = setInterval(() => {
+      current = Math.min(92, current + Math.random() * 10 + 3);
+      setProgress(Math.floor(current));
+    }, 100);
+
+    // Exit when the page has finished loading (min 400ms display)
+    const MIN_DISPLAY = 400;
+    const onReady = () => {
+      const elapsed = performance.now() - started;
+      setTimeout(startExit, Math.max(0, MIN_DISPLAY - elapsed));
+    };
+
+    if (document.readyState === "complete") {
+      onReady();
+    } else {
+      window.addEventListener("load", onReady, { once: true });
+    }
+
+    // Safety net: force exit after 5s no matter what
+    safetyTimer = setTimeout(startExit, 5000);
 
     return () => {
-      cancelAnimationFrame(raf);
+      if (interval) clearInterval(interval);
+      if (safetyTimer) clearTimeout(safetyTimer);
+      window.removeEventListener("load", onReady);
       document.body.style.overflow = "";
     };
   }, []);
