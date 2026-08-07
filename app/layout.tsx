@@ -25,6 +25,8 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700,800,900&display=swap"
         />
+        <link rel="preload" as="video" href="/videos/hero.mp4" type="video/mp4" />
+        <link rel="preload" as="image" href="/images/hero.png" />
       </head>
       <body>{children}</body>
     </html>

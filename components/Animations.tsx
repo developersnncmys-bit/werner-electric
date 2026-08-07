@@ -85,7 +85,7 @@ export default function Animations() {
             anticipatePin: 1,
           },
         })
-          .to(".hero__img", { scale: 1.2, ease: "power1.inOut", duration: 1 }, 0)
+          .to(".hero__img", { scale: 1.5, ease: "power1.inOut", duration: 1 }, 0)
           .to(".hero__wordmark", { opacity: 0, y: -60, ease: "power2.in", duration: 0.5 }, 0)
           .to(".hero__statement", { opacity: 1, y: 0, ease: "power2.out", duration: 0.6 }, 0.4);
       }

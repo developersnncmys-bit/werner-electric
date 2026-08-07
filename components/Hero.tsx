@@ -2,10 +2,15 @@ export default function Hero() {
   return (
     <header id="top" className="hero">
       <div className="hero__bg" aria-hidden="true">
-        <img
+        <video
           className="hero__img"
-          src="/images/hero.png"
-          alt=""
+          src="/videos/hero.mp4"
+          poster="/images/hero.png"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
         />
         <div className="hero__vignette" />
       </div>

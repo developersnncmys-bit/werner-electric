@@ -122,6 +122,13 @@ button { font: inherit; cursor: pointer; }
   -webkit-background-clip: text; background-clip: text;
   color: transparent; -webkit-text-fill-color: transparent;
 }
+.preloader__mark-logo {
+  position: relative; z-index: 1;
+  display: block;
+  width: clamp(200px, 28vw, 440px);
+  height: auto;
+  object-fit: contain;
+}
 .preloader__mark-line {
   display: block; height: 1px; width: 62%;
   margin: 10px auto 0;

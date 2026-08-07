@@ -80,9 +80,8 @@ export default function Preloader() {
 
         {/* Center mark */}
         <div className="preloader__mark-wrap">
-          <h1 className="preloader__mark">
-            Werner<span className="preloader__mark-dot">.</span>
-          </h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Werner" className="preloader__mark-logo" />
           <span className="preloader__mark-line" />
         </div>
       </div>
